@@ -7,6 +7,7 @@ function render(title, name) {
   <title>{title}</title>
 </head>
 <body #body>
+  {{stuff}}
   <h1 #headline>{ title + ' ' + title.toUpperCase() }</h\
   1>
   <p>

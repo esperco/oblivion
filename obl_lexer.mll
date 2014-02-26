@@ -137,6 +137,9 @@ rule parse_document = parse
   | eof           { [] }
 
 and parse_html acc = parse
+
+  (* Standard HTML *)
+
   | "<!--" ([^'-'] | '-'[^'-'])* "-->"
       { (* ignore comment *)
         parse_html acc lexbuf }
@@ -165,12 +168,22 @@ and parse_html acc = parse
   | "<"
       { (* tolerate unescaped "<" *)
         parse_html (Tok_data "<" :: acc) lexbuf }
-  | [^ '<' '&' '\'']+ as s
+  | [^ '<' '&' '\'' '{' '\\']+ as s
       { parse_html (Tok_data s :: acc) lexbuf }
+
+  (* Template syntax *)
+
   | "'''"
       { fuse_cdata (List.rev acc) }
   | "'" ("''" ['\'']+ as s)
       { parse_html (Tok_data s :: acc) lexbuf }
+  | "{{" ([^'{' '}']* as s) "}}"
+      { parse_html (Tok_js_jquery s :: acc) lexbuf }
+  | "{" ([^'{' '}']* as s) "}"
+      { parse_html (Tok_js_string s :: acc) lexbuf }
+  | "\\{"
+      { parse_html (Tok_data "{" :: acc) lexbuf }
+
   | _ as c
       { parse_html (Tok_data (String.make 1 c) :: acc) lexbuf }
   | eof
@@ -186,6 +199,9 @@ and parse_entity = parse
         "&" }
 
 and parse_attributes opt_ident acc = parse
+
+  (* Standard HTML *)
+
   | ">"
       { false, opt_ident, List.rev acc }
   | "/>"
@@ -210,6 +226,9 @@ and parse_attributes opt_ident acc = parse
       { let v = parse_string_literal2 (Buffer.create 100) lexbuf in
         parse_attributes opt_ident
           ((String.lowercase k, Some v) :: acc) lexbuf }
+
+
+  (* Template syntax *)
 
   | "#" (js_ident as s)
       { let opt_ident =
