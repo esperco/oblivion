@@ -1,5 +1,7 @@
+*~
 *.cm*
 *.annot
 *.[oa]
-herejs.ml
-herejs
+obl_lexer.ml
+oblivion
+example.out

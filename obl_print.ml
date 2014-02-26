@@ -44,7 +44,7 @@ let rec print_node buf counter nl opt_parent x =
       (match opt_js_ident with
        | None -> ()
        | Some s ->
-           bprintf buf "var %s = _%i" s id;
+           bprintf buf "var %s = _%i; _view.%s = _%i" s id s id;
            semicolon buf nl;
       );
       List.iter (print_node buf counter nl (Some id)) children
@@ -80,6 +80,8 @@ let print_doc_elem buf x =
   | Js s -> Buffer.add_string buf s
   | Template (l, nl_count) ->
       let remaining_newlines = ref nl_count in
+      bprintf buf "var _view = {}";
+      semicolon buf remaining_newlines;
       List.iter (print_node buf (ref 0) remaining_newlines None) l;
       if !remaining_newlines > 0 then
         Buffer.add_string buf (String.make !remaining_newlines '\n')
