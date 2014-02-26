@@ -30,13 +30,28 @@
       pos_fname = fname;
     }
 
+  let get_linenum lexbuf =
+    lexbuf.lex_curr_p.pos_lnum
+
+  let newlines lexbuf n =
+    if n <> 0 then
+      let pos = lexbuf.lex_curr_p in
+      lexbuf.lex_curr_p <- {
+        pos with
+        pos_lnum = pos.pos_lnum + n;
+        pos_bol = pos.pos_cnum
+      }
+
   let newline lexbuf =
-    let pos = lexbuf.lex_curr_p in
-    lexbuf.lex_curr_p <- {
-      pos with
-      pos_lnum = pos.pos_lnum + 1;
-      pos_bol = pos.pos_cnum
-    }
+    newlines lexbuf 1
+
+  let count_newlines s =
+    let n = ref 0 in
+    String.iter (function '\n' -> incr n | _ -> ()) s;
+    !n
+
+  let newlines_from_string lexbuf s =
+    newlines lexbuf (count_newlines s)
 
   let string_of_loc (pos1, pos2) =
     let open Lexing in
@@ -129,8 +144,11 @@ rule parse_document = parse
                   { Js s :: parse_document lexbuf }
   | '\n'          { newline lexbuf;
                     Js "\n" :: parse_document lexbuf }
-  | "'''"         { let x = make_seq [] [] (parse_html [] lexbuf) in
-                    Template x :: parse_document lexbuf }
+  | "'''"         { let first_line = get_linenum lexbuf in
+                    let x = make_seq [] [] (parse_html [] lexbuf) in
+                    let last_line = get_linenum lexbuf in
+                    let nl_count = last_line - first_line in
+                    Template (x, nl_count) :: parse_document lexbuf }
   | "'" ("''" ['\'']+ as s)
                   { Js s :: parse_document lexbuf }
   | _ as c        { Js (String.make 1 c) :: parse_document lexbuf }
@@ -140,14 +158,17 @@ and parse_html acc = parse
 
   (* Standard HTML *)
 
-  | "<!--" ([^'-'] | '-'[^'-'])* "-->"
+  | "<!--" ([^'-'] | '-'[^'-'])* "-->" as s
       { (* ignore comment *)
+        newlines_from_string lexbuf s;
         parse_html acc lexbuf }
-  | "<!" [^'>']* ">"
+  | "<!" [^'>']* ">" as s
       { (* ignore doctype *)
+        newlines_from_string lexbuf s;
         parse_html acc lexbuf }
-  | "<?" [^'>']* "?>"
+  | "<?" [^'>']* "?>" as s
       { (* ignore xml processing instruction *)
+        newlines_from_string lexbuf s;
         parse_html acc lexbuf }
   | "<" (name as elt_name)
       { let closed, opt_ident, l = parse_attributes None [] lexbuf in
@@ -159,8 +180,9 @@ and parse_html acc = parse
             Open_element (String.lowercase elt_name, opt_ident, l)
         in
         parse_html (x :: acc) lexbuf }
-  | "</" (name as elt_name) ws* ">"
-      { let x = Close_element elt_name in
+  | "</" (name as elt_name) (ws* as s) ">"
+      { newlines_from_string lexbuf s;
+        let x = Close_element elt_name in
         parse_html (x :: acc) lexbuf }
   | "&"
       { let x = parse_entity lexbuf in
@@ -169,7 +191,8 @@ and parse_html acc = parse
       { (* tolerate unescaped "<" *)
         parse_html (Tok_data "<" :: acc) lexbuf }
   | [^ '<' '&' '\'' '{' '\\']+ as s
-      { parse_html (Tok_data s :: acc) lexbuf }
+      { newlines_from_string lexbuf s;
+        parse_html (Tok_data s :: acc) lexbuf }
 
   (* Template syntax *)
 
@@ -178,14 +201,18 @@ and parse_html acc = parse
   | "'" ("''" ['\'']+ as s)
       { parse_html (Tok_data s :: acc) lexbuf }
   | "{{" ([^'{' '}']* as s) "}}"
-      { parse_html (Tok_js_jquery s :: acc) lexbuf }
+      { newlines_from_string lexbuf s;
+        parse_html (Tok_js_jquery s :: acc) lexbuf }
   | "{" ([^'{' '}']* as s) "}"
-      { parse_html (Tok_js_string s :: acc) lexbuf }
+      { newlines_from_string lexbuf s;
+        parse_html (Tok_js_string s :: acc) lexbuf }
   | "\\{"
       { parse_html (Tok_data "{" :: acc) lexbuf }
 
   | _ as c
-      { parse_html (Tok_data (String.make 1 c) :: acc) lexbuf }
+      { if c = '\n' then
+          newline lexbuf;
+        parse_html (Tok_data (String.make 1 c) :: acc) lexbuf }
   | eof
       { error lexbuf "Missing closing triple quote (''')" }
 
@@ -206,24 +233,28 @@ and parse_attributes opt_ident acc = parse
       { false, opt_ident, List.rev acc }
   | "/>"
       { true, opt_ident, List.rev acc }
-  | ws+
-      { parse_attributes opt_ident acc lexbuf }
+  | ws+ as s
+      { newlines_from_string lexbuf s;
+        parse_attributes opt_ident acc lexbuf }
 
   | (name as k)
       { parse_attributes opt_ident
           ((String.lowercase k, None) :: acc) lexbuf }
 
-  | (name as k) ws* "=" (unquoted_attribute as v)
-      { parse_attributes opt_ident
-          ((String.lowercase k, Some v) :: acc) lexbuf }
-
-  | (name as k) ws* "=" ws* '"'
-      { let v = parse_string_literal1 (Buffer.create 100) lexbuf in
+  | (name as k) (ws* as s) "=" (unquoted_attribute as v)
+      { newlines_from_string lexbuf s;
         parse_attributes opt_ident
           ((String.lowercase k, Some v) :: acc) lexbuf }
 
-  | (name as k) ws* "=" ws* "'"
-      { let v = parse_string_literal2 (Buffer.create 100) lexbuf in
+  | (name as k) ws* "=" ws* '"' as s
+      { newlines_from_string lexbuf s;
+        let v = parse_string_literal1 (Buffer.create 100) lexbuf in
+        parse_attributes opt_ident
+          ((String.lowercase k, Some v) :: acc) lexbuf }
+
+  | (name as k) ws* "=" ws* "'" as s
+      { newlines_from_string lexbuf s;
+        let v = parse_string_literal2 (Buffer.create 100) lexbuf in
         parse_attributes opt_ident
           ((String.lowercase k, Some v) :: acc) lexbuf }
 
@@ -251,7 +282,8 @@ and parse_attributes opt_ident acc = parse
 
 and parse_string_literal1 buf = parse
   | ( [^ '"' '&']* as s)
-      { Buffer.add_string buf s;
+      { newlines_from_string lexbuf s;
+        Buffer.add_string buf s;
         parse_string_literal1 buf lexbuf }
   | "&"
       { Buffer.add_string buf (parse_entity lexbuf);
@@ -263,7 +295,8 @@ and parse_string_literal1 buf = parse
 
 and parse_string_literal2 buf = parse
   | ( [^ '\'' '&']* as s)
-      { Buffer.add_string buf s;
+      { newlines_from_string lexbuf s;
+        Buffer.add_string buf s;
         parse_string_literal2 buf lexbuf }
   | "&"
       { Buffer.add_string buf (parse_entity lexbuf);

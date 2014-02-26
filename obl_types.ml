@@ -11,6 +11,7 @@ type template = node list
 
 type doc_elem =
   | Js of string
-  | Template of template
+  | Template of (template
+                 * int (* newline count *))
 
 type document = doc_elem list
