@@ -217,7 +217,9 @@ and parse_html acc = parse
       { error lexbuf "Missing closing triple quote (''')" }
 
 and parse_entity = parse
-  | "#x" (hexdigit hexdigit as s) ";"
+  | "#" (digit+ as s) ";"
+      { Obl_utf8.string_of_unicode (int_of_string s) }
+  | "#x" (hexdigit+ as s) ";"
       { Obl_utf8.string_of_unicode (int_of_string ("0x" ^ s)) }
   | (name as name) ";"
       { Obl_html.string_of_entity_name name }
