@@ -43,9 +43,9 @@ $("#msg").text(text);
 ```
 
 Huh. This assumes that no other element in the whole document may be
-identified by `id=msg`. If not, the selection `$("#msg")`
+identified by `id="msg"`. If not, the selection `$("#msg")`
 selects the wrong element. What we want here is trade our global
-identifier for a JavaScript local variable. This is done as follows:
+identifier for a local JavaScript variable. This is done as follows:
 
 ```javascript
 var view = $('<div/>');
