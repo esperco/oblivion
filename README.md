@@ -44,7 +44,7 @@ $("#msg").text(text);
 
 Huh. This assumes that no other element in the whole document may be
 identified by `id="msg"`. If not, the selection `$("#msg")`
-selects the wrong element. What we want here is trade our global
+may hold the wrong element. What we want here is trade our global
 identifier for a local JavaScript variable. This is done as follows:
 
 ```javascript
@@ -86,8 +86,7 @@ Our example written in `oblivion` is:
   <span class="example" #msg></span>
 </div>
 '''
-var text = isNewUser(user) ? "Welcome!" : "Hello!";
-msg.text(text);
+msg.text(isNewUser(user) ? "Welcome!" : "Hello!");
 ```
 
 Also, the node variables are automatically packed into a `_view`
@@ -116,15 +115,15 @@ e.g. `'''<div/>'''`. This HTML-like code obeys the following rules:
   attributes of an HTML element, preceded by a hash sign, e.g.
   `'''<div #jsVariable/>'''`.
 * Curly braces can be used to enclose a JavaScript expression that
-  evaluates to a string, e.g. '''<div>{msgText}</div>'''. An opening
+  evaluates to a string, e.g. `'''<div>{msgText}</div>'''`. An opening
   curly brace `{` can be escaped by a backslash. The contents of the
-  curly braces cannot contain a closing curly brace '}'.
+  curly braces cannot contain a closing curly brace `}`.
 * Double curly braces can be used to enclose a JavaScript expression
   that evaluates to a jQuery selection,
-  e.g. '''<div>{{msgBox}}</div>'''.
+  e.g. `'''<div>{{msgBox}}</div>'''`.
   An opening double curly brace `{{` can be escaped by a backslash.
   The contents of the double curly braces cannot contain a closing
-  double curly brace '}}'.
+  double curly brace `}}`.
 * Standard HTML and XML character entities are supported.
 * XML self-closing elements are supported (e.g. `<br/>`).
 * Standard XML nodes (comments etc.) other than regular elements
