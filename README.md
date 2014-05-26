@@ -138,7 +138,7 @@ Command-line usage
 ------------------
 
 ```bash
-$ mkdir -p js  # subdirectory js/ is where our pure JavaScript output ends up
+$ mkdir -p js  # where our JavaScript output ends up
 $ oblivion example.js -o js/example.js
 ```
 
