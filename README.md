@@ -116,12 +116,12 @@ e.g. `'''<div/>'''`. This HTML-like code obeys the following rules:
   `'''<div #jsVariable/>'''`.
 * Curly braces can be used to enclose a JavaScript expression that
   evaluates to a string, e.g. `'''<div>{msgText}</div>'''`. An opening
-  curly brace `{` can be escaped by a backslash. The contents of the
+  curly brace `{` can be escaped by a backslash (`\{`). The contents of the
   curly braces cannot contain a closing curly brace `}`.
 * Double curly braces can be used to enclose a JavaScript expression
   that evaluates to a jQuery selection,
   e.g. `'''<div>{{msgBox}}</div>'''`.
-  An opening double curly brace `{{` can be escaped by a backslash.
+  An opening double curly brace `{{` can be escaped by a backslash (`\{{`).
   The contents of the double curly braces cannot contain a closing
   double curly brace `}}`.
 * Standard HTML and XML character entities are supported.
