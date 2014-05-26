@@ -97,8 +97,8 @@ object that can be easily passed around to other functions. This means
 that in the example above, `view` and `msg` are also available as
 `_view.view` and `_view.msg`.
 
-This is all done statically and if your html code contains syntax
-an error, `oblivion` will indicate its exact position in the source file.
+This is all done statically and if your html code contains a syntax
+error, `oblivion` will indicate its exact position in the source file.
 
 Syntax reference
 ----------------
