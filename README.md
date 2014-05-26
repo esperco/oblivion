@@ -1,12 +1,15 @@
 Oblivion
 ========
 
-Javascript/jQuery preprocessor for HTML templates with named subnodes.
+Oblivion is a preprocessor for JavaScript source files. It allows the
+programmer to embed raw html code into JavaScript with very few
+modifications. Only local variable names need to be inserted, allowing
+these html elements to be modified programmatically.
 
 What is oblivion for?
 ---------------------
 
-Ever wanted to copy-paste HTML code directly into a JavaScript string?
+Ever wanted to copy-paste html code directly into a JavaScript string?
 
 ```javascript
 var s = '
