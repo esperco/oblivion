@@ -95,7 +95,7 @@ that in the example above, `view` and `msg` are also available as
 `_view.view` and `_view.msg`.
 
 This is all done statically and if your html code contains syntax
-errors, `oblivion` will indicate the exact position in the source file.
+an error, `oblivion` will indicate its exact position in the source file.
 
 Syntax reference
 ----------------
