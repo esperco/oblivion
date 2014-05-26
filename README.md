@@ -9,11 +9,11 @@ What is oblivion for?
 Ever wanted to copy-paste HTML code directly into a JavaScript string?
 
 ```javascript
-var s = "
+var s = '
 <div>
   <span class="example">Welcome!</span>
 </div>
-";
+';
 ```
 
 Oops, that's invalid.
