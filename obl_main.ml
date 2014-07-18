@@ -1,15 +1,16 @@
 open Printf
 
-let run source ic oc =
+let run ~format source ic oc =
   let document = Obl_lexer.from_channel source ic in
   let buf = Buffer.create 1000 in
-  Obl_print.print_document buf source document;
+  Obl_print.print_document ~format buf source document;
   output_string oc (Buffer.contents buf);
   flush oc
 
 let main () =
   let out_file = ref None in
   let in_file = ref None in
+  let format = ref Obl_print.Javascript in
   let options = [
     "-o",
     Arg.String (
@@ -21,6 +22,16 @@ let main () =
     ),
     "<file>
           Output file (default: output goes to stdout)";
+
+    "-js",
+    Arg.Unit (fun () -> format := Obl_print.Javascript),
+    "
+          Produce JavaScript code (default)";
+
+    "-ts",
+    Arg.Unit (fun () -> format := Obl_print.Typescript),
+    "
+          Produce TypeScript code";
   ]
   in
   let anon_fun s =
@@ -52,6 +63,6 @@ Command-line options:
       None -> stdout
     | Some file -> open_out file
   in
-  run source ic oc
+  run ~format: !format source ic oc
 
 let () = main ()

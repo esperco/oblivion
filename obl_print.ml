@@ -1,6 +1,12 @@
 open Printf
 open Obl_types
 
+type format = Javascript | Typescript
+
+type options = {
+  format: format;
+}
+
 let quote_js_string s =
   let buf = Buffer.create (2 * String.length s) in
   Buffer.add_char buf '"';
@@ -44,7 +50,7 @@ let rec print_node buf counter nl opt_parent x =
       (match opt_js_ident with
        | None -> ()
        | Some s ->
-           bprintf buf "var %s = _%i; _view.%s = _%i" s id s id;
+           bprintf buf "var %s = _%i" s id;
            semicolon buf nl;
       );
       List.iter (print_node buf counter nl (Some id)) children
@@ -75,18 +81,44 @@ let rec print_node buf counter nl opt_parent x =
            semicolon buf nl;
       )
 
-let print_doc_elem buf x =
+let print_field ident =
+  sprintf "%s: %s" ident ident
+
+let print_fields l =
+  String.concat ", " (List.map print_field l)
+
+let extract_fields l =
+  let rec aux acc l =
+    List.fold_left (fun acc x ->
+      match x with
+      | Element (_, opt_id, _, children) ->
+          let acc =
+            match opt_id with
+            | None -> acc
+            | Some id -> id :: acc
+          in
+          aux acc children
+      | _ ->
+          acc
+    ) acc l
+  in
+  List.rev (aux [] l)
+
+let print_doc_elem options buf x =
   match x with
   | Js s -> Buffer.add_string buf s
   | Template (l, nl_count) ->
       let remaining_newlines = ref nl_count in
-      bprintf buf "var _view = {}";
       semicolon buf remaining_newlines;
       List.iter (print_node buf (ref 0) remaining_newlines None) l;
+      let fields = extract_fields l in
+      bprintf buf "var _view = {%s}" (print_fields fields);
+      semicolon buf remaining_newlines;
       if !remaining_newlines > 0 then
         Buffer.add_string buf (String.make !remaining_newlines '\n')
 
-let print_document buf source l =
+let print_document ~format buf source l =
   bprintf buf "/* Auto-generated from %s by oblivion. Better not edit. */ "
     source;
-  List.iter (print_doc_elem buf) l
+  let options = {format} in
+  List.iter (print_doc_elem options buf) l
