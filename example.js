@@ -19,6 +19,7 @@ function render(title, name) {
   <p>
     3 single quotes: ''''
   </p>
+  <input type="radio" checked />
 </body>
 </html>
 '''

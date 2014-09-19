@@ -241,7 +241,7 @@ and parse_attributes opt_ident acc = parse
 
   | (name as k)
       { parse_attributes opt_ident
-          ((String.lowercase k, None) :: acc) lexbuf }
+          ((String.lowercase k, Some (String.lowercase k)) :: acc) lexbuf }
 
   | (name as k) (ws* as s) "=" (unquoted_attribute as v)
       { newlines_from_string lexbuf s;
