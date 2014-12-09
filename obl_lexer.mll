@@ -145,14 +145,19 @@ rule parse_document = parse
   | '\n'          { newline lexbuf;
                     Js "\n" :: parse_document lexbuf }
   | "'''"         { let first_line = get_linenum lexbuf in
+                    let options = parse_options lexbuf in
                     let x = make_seq [] [] (parse_html [] lexbuf) in
                     let last_line = get_linenum lexbuf in
                     let nl_count = last_line - first_line in
-                    Template (x, nl_count) :: parse_document lexbuf }
+                    Template (options, x, nl_count) :: parse_document lexbuf }
   | "'" ("''" ['\'']+ as s)
                   { Js s :: parse_document lexbuf }
   | _ as c        { Js (String.make 1 c) :: parse_document lexbuf }
   | eof           { [] }
+
+and parse_options = parse
+  | [' ' '\t']* js_ident as view_name  { Some view_name }
+  | ""                                 { None }
 
 and parse_html acc = parse
 

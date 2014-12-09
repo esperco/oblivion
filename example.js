@@ -23,5 +23,8 @@ function render(title, name) {
 </body>
 </html>
 '''
+
+  '''another_view <b #woof>Woof!</b>'''
+
   return [ body, headline ];
 }
