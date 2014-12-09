@@ -95,7 +95,17 @@ msg.text(isNewUser(user) ? "Welcome!" : "Hello!");
 Also, the node variables are automatically packed into a `_view`
 object that can be easily passed around to other functions. This means
 that in the example above, `view` and `msg` are also available as
-`_view.view` and `_view.msg`.
+`_view.view` and `_view.msg`. Another name than `_view` can be
+specified on the first line, just after the opening `'''`:
+
+```javascript
+''' main_view
+<div #view>
+  <span class="example" #msg></span>
+</div>
+'''
+msg.text(isNewUser(user) ? "Welcome!" : "Hello!");
+```
 
 This is all done statically and if your html code contains a syntax
 error, `oblivion` will indicate its exact position in the source file.
